@@ -25,6 +25,7 @@ var (
 	_buildVersion     = "unknown"
 	_buildGitRevision = "unknown"
 	_buildOS          = "unknown"
+	_buildDate        = "unknown"
 
 	_buildGoVersion = runtime.Version()
 	_runningOS      = runtime.GOOS + "/" + runtime.GOARCH
@@ -49,5 +50,6 @@ func Long() string {
 	fmt.Fprintln(buf, "Go Version:", _buildGoVersion)
 	fmt.Fprintln(buf, "Building OS/Arch:", _buildOS)
 	fmt.Fprintln(buf, "Running OS/Arch:", _runningOS)
+	fmt.Fprintln(buf, "Building date:", _buildDate)
 	return buf.String()
 }

@@ -29,6 +29,7 @@ endif
 GINKGO ?= $(shell which ginkgo)
 OSNAME ?= $(shell uname -s | tr A-Z a-z)
 OSARCH ?= $(shell uname -m | tr A-Z a-z)
+BUILD_DATE := $(shell date +%Y-%m-%dT%H:%M:%S.%s)
 PWD ?= $(shell pwd)
 ifeq ($(OSARCH), x86_64)
 	OSARCH = amd64
@@ -37,17 +38,39 @@ endif
 VERSYM="github.com/apache/apisix-ingress-controller/pkg/version._buildVersion"
 GITSHASYM="github.com/apache/apisix-ingress-controller/pkg/version._buildGitRevision"
 BUILDOSSYM="github.com/apache/apisix-ingress-controller/pkg/version._buildOS"
-GO_LDFLAGS ?= "-X=$(VERSYM)=$(VERSION) -X=$(GITSHASYM)=$(GITSHA) -X=$(BUILDOSSYM)=$(OSNAME)/$(OSARCH)"
+BUILDDATESYM="github.com/apache/apisix-ingress-controller/pkg/version._buildDate"
+GO_LDFLAGS ?= "-X=$(VERSYM)=$(VERSION) -X=$(GITSHASYM)=$(GITSHA) -X=$(BUILDOSSYM)=$(OSNAME)/$(OSARCH) -X=$(BUILDDATESYM)=$(BUILD_DATE)"
 E2E_CONCURRENCY ?= 1
 E2E_SKIP_BUILD ?= 0
+
+GO_FILES := $(shell find . -iname "*.go")
+GO_FILES += go.mod go.sum
 
 ### build:                Build apisix-ingress-controller
 .PHONY: build
 build:
+	pass
+
+apisix-ingress-controller$(GO_ARCH):
 	go build \
 		-o apisix-ingress-controller \
 		-ldflags $(GO_LDFLAGS) \
 		main.go
+
+apisix-ingress-controller.amd64: $(GO_FILES)
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 $(MAKE) apisix-ingress-controller
+	mv apisix-ingress-controller apisix-ingress-controller.amd64
+
+apisix-ingress-controller.arm64: $(GO_FILES)
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 $(MAKE) apisix-ingress-controller
+	mv apisix-ingress-controller apisix-ingress-controller.arm64
+
+podman-build: apisix-ingress-controller.amd64 apisix-ingress-controller.arm64
+	podman build --platform linux/amd64,linux/arm64 \
+		-f Dockerfile \
+		--manifest new-apisix-ingress-controller-test .
+	podman manifest push --all new-apisix-ingress-controller-test ghcr.io/jaysonsantos/bunderwar:apisix-ingress-controller-test
+
 
 ### build-image:          Build apisix-ingress-controller image
 .PHONY: build-image

@@ -265,6 +265,7 @@ func (c *Controller) initWhenStartLeading() {
 	c.podInformer = kubeFactory.Core().V1().Pods().Informer()
 	c.svcInformer = kubeFactory.Core().V1().Services().Informer()
 	c.ingressInformer = ingressInformer
+	log.Infof("Here is the informer %s", apisixRouteInformer)
 	c.apisixRouteInformer = apisixRouteInformer
 	c.apisixUpstreamInformer = apisixFactory.Apisix().V2beta3().ApisixUpstreams().Informer()
 	c.apisixClusterConfigInformer = apisixFactory.Apisix().V2beta3().ApisixClusterConfigs().Informer()

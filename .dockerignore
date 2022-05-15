@@ -26,3 +26,4 @@
 !go.sum
 !Makefile
 !main.go
+!apisix-ingress*
